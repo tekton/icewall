@@ -13,7 +13,12 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
-    url, _ := url.Parse(r.Header.Get("x-iw-fwd"))
+    host := r.Header.Get("x-iw-fwd")
+    if host == "" {
+        host = viper.GetString("default_host")
+    }
+
+    url, _ := url.Parse(host)
     proxy := httputil.NewSingleHostReverseProxy(url)
     r.URL.Host = url.Host
     r.URL.Scheme = url.Scheme
@@ -29,6 +34,7 @@ func init() {
     viper.SetConfigName("icewall")
 
     viper.SetDefault("log_level", "info")
+    viper.SetDefault("default_host", "http://localhost")
 
     viper_err := viper.ReadInConfig()   // Find config, read config, or else...
     if viper_err != nil {

@@ -1,4 +1,5 @@
 {
     "note": "this is an exmple only",
-    "port": 8878
+    "port": 8878,
+    "default_host": "https://local.host"
 }
