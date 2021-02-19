@@ -18,6 +18,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
         host = viper.GetString("default_host")
     }
 
+    // header rules
+    // path rules
+    // query string rules
+
+    // headers to look for as an array?
+
     url, _ := url.Parse(host)
     proxy := httputil.NewSingleHostReverseProxy(url)
     r.URL.Host = url.Host
@@ -47,10 +53,14 @@ func init() {
     if viper.GetString("log_level") == "debug" {
         zerolog.SetGlobalLevel(zerolog.DebugLevel)
     }
+
+    // read basic rules from files on disk? badger?
+    // subscribe to "ticker" for new rules
 }
 
 func main() {
     http.HandleFunc("/", handler)
+    // http.HandleFunc("/__iw__/api/add_rule", handler)
 
     port := fmt.Sprintf(":%s", viper.GetString("port"))
     log.Fatal().Err(http.ListenAndServe(port, nil))
