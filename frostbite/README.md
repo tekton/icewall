@@ -1,4 +1,4 @@
 frostbite
 =========
 
-UI to handle the updates and see what's active
+daemon service to keep data and caps in sync
