@@ -55,7 +55,7 @@ func init() {
     }
 
     // read basic rules from files on disk? badger?
-    // subscribe to "ticker" for new rules
+    // subscribe to "ticker" for new rules - how does base get made? does it reset the ticker data?
 }
 
 func main() {
