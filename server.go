@@ -94,9 +94,9 @@ func init() {
     viper_err := viper.ReadInConfig()   // Find config, read config, or else...
     if viper_err != nil {
         panic(fmt.Errorf("Fatal error config file: %s \n", viper_err))
-    } else {
-        fmt.Println(viper.AllKeys())
-    }
+    } // else {
+    //     fmt.Println(viper.AllKeys())
+    // }
 
     zerolog.SetGlobalLevel(zerolog.InfoLevel)
     if viper.GetString("log_level") == "debug" {
@@ -106,6 +106,8 @@ func init() {
     zerolog.TimestampFieldName = "t"
     zerolog.LevelFieldName = "l"
     zerolog.MessageFieldName = "m"
+
+    log.Info().Msg("starting icewall")
 
     // read basic rules from files on disk? badger?
     // subscribe to "ticker" for new rules - how does base get made? does it reset the ticker data?
