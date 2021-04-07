@@ -9,6 +9,7 @@ import (
     "time"
 
     //
+    "github.com/rs/xid"
     "github.com/spf13/viper"
     "github.com/rs/zerolog"
     "github.com/rs/zerolog/log"
@@ -28,12 +29,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
         }
     }
     //
+    id := xid.New()
+    r.Header.Set("x-iw-id", id.String())
     host := r.Header.Get("x-iw-fwd")
     if host == "" {
         host = viper.GetString("default_host")
     }
 
-    log.Info().Str("host", host).Msg("Test")
+    // log.Debug().Str("host", host).Msg("Test")
 
     // header rules
     // path rules
@@ -55,26 +58,28 @@ func handler(w http.ResponseWriter, r *http.Request) {
     headers, h_err := json.Marshal(r.Header)
 
     if h_err != nil {
-        log.Error().Err(h_err).Msg("Could not Marshal Req Headers")
+        log.Error().Err(h_err).Str("req", id.String()).Msg("Could not Marshal Req Headers")
     }
 
-    log.Info().RawJSON("headers", headers).Msg("req")
+    // it's nice to see when a requests effectively starts- just in case something happens...
+    log.Info().RawJSON("headers", headers).Str("uri", r.URL.String()).Str("req", id.String()).Msg("req")
 
+    // intercept things not to change them, just to log them!
     proxy.ModifyResponse = func(res *http.Response) error {
-        headers, h_err := json.Marshal(r.Header)
+        headers, h_err := json.Marshal(res.Header)
 
         if h_err != nil {
-            log.Error().Err(h_err).Msg("Could not Marshal Req Headers")
+            log.Error().Err(h_err).Str("req", id.String()).Msg("Could not Marshal Req Headers")
         }
 
-        log.Info().RawJSON("headers", headers).Msg("res")
+        log.Info().RawJSON("headers", headers).Str("req", id.String()).Msg("res")
         return nil
     }
 
     proxy.ServeHTTP(w, r)
 
     latency := time.Since(start).Seconds()
-    log.Info().Float64("latency", latency).Msg("Function Report")
+    log.Info().Float64("latency", latency).Str("req", id.String()).Msg("")
 }
 
 func init() {
