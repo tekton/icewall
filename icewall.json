@@ -1,5 +1,11 @@
 {
     "note": "this is an exmple only",
     "port": 8878,
-    "default_host": "https://local.host"
+    "default_host": "https://pyroturtle.com/porque/",
+    "health_check": {
+        "path": "/health",
+        "action": "file",
+        "file": "icewall_build_meta.json",
+        "type": "application/json"
+    }
 }

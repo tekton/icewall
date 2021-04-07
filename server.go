@@ -5,6 +5,8 @@ import (
     "net/http"
     "net/url"
     "net/http/httputil"
+    "encoding/json"
+    "time"
 
     //
     "github.com/spf13/viper"
@@ -13,10 +15,25 @@ import (
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
+    start := time.Now()
+    // laod balancer health short circuit rule check
+    if (r.URL.Path == viper.GetString("health_check.path")) {
+        log.Debug().Msg("health check")
+        // we have a health check to perform! Now, which kind?
+        if (viper.GetString("health_check.action") == "file") {
+            // ah, a file- we should serve it back and exit early!
+            w.Header().Set("Content-Type", viper.GetString("health_check.type"))
+            http.ServeFile(w, r, viper.GetString("health_check.file"))
+            return
+        }
+    }
+    //
     host := r.Header.Get("x-iw-fwd")
     if host == "" {
         host = viper.GetString("default_host")
     }
+
+    log.Info().Str("host", host).Msg("Test")
 
     // header rules
     // path rules
@@ -26,11 +43,38 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
     url, _ := url.Parse(host)
     proxy := httputil.NewSingleHostReverseProxy(url)
+    // defer proxy.Close()
+
     r.URL.Host = url.Host
     r.URL.Scheme = url.Scheme
     r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
     r.Host = url.Host
+
+    // log.Info().Str("scheme", r.URL.Scheme).Msg("r")
+
+    headers, h_err := json.Marshal(r.Header)
+
+    if h_err != nil {
+        log.Error().Err(h_err).Msg("Could not Marshal Req Headers")
+    }
+
+    log.Info().RawJSON("headers", headers).Msg("req")
+
+    proxy.ModifyResponse = func(res *http.Response) error {
+        headers, h_err := json.Marshal(r.Header)
+
+        if h_err != nil {
+            log.Error().Err(h_err).Msg("Could not Marshal Req Headers")
+        }
+
+        log.Info().RawJSON("headers", headers).Msg("res")
+        return nil
+    }
+
     proxy.ServeHTTP(w, r)
+
+    latency := time.Since(start).Seconds()
+    log.Info().Float64("latency", latency).Msg("Function Report")
 }
 
 func init() {
@@ -53,6 +97,10 @@ func init() {
     if viper.GetString("log_level") == "debug" {
         zerolog.SetGlobalLevel(zerolog.DebugLevel)
     }
+
+    zerolog.TimestampFieldName = "t"
+    zerolog.LevelFieldName = "l"
+    zerolog.MessageFieldName = "m"
 
     // read basic rules from files on disk? badger?
     // subscribe to "ticker" for new rules - how does base get made? does it reset the ticker data?
