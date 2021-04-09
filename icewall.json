@@ -3,9 +3,23 @@
     "port": 8878,
     "default_host": "https://pyroturtle.com/porque/",
     "health_check": {
-        "path": "/health",
+        "path": "/__iw__health",
         "action": "file",
         "file": "icewall_build_meta.json",
-        "type": "application/json"
+        "type": "application/json",
+        "maintenance": {
+            "file": "up.txt",
+            "check_val": "down",
+            "status_code": 499
+        }
+    },
+    "rules_enabled": true,
+    "global_throttle": {
+        "note": "These are to help with DDOS and general requests across the system like api keys",
+        "enabled": true,
+        "type": "headers",
+        "header_list": [
+            "x-iw-test-gt"
+        ]
     }
 }
