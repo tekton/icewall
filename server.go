@@ -103,7 +103,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
     r.URL.Host = url.Host
     r.URL.Scheme = url.Scheme
-    r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
+    if (viper.GetBool("forwarded_host") == true) {
+        if r.Header.Get("Host") != "" && r.Header.Get("Host") != "::1" {
+            r.Header.Set("X-Forwarded-Host", r.Header.Get("Host"))
+        }
+    }
     r.Host = url.Host
 
     // log.Info().Str("scheme", r.URL.Scheme).Msg("r")
@@ -145,6 +149,7 @@ func init() {
 
     viper.SetDefault("log_level", "info")
     viper.SetDefault("default_host", "http://localhost")
+    viper.SetDefault("forwarded_host", true)
 
     viper_err := viper.ReadInConfig()   // Find config, read config, or else...
     if viper_err != nil {
